@@ -35,12 +35,12 @@ fn run() -> Result<()> {
         }
 
         if let Some(song) = metadata::Metadata::new(entry.path())? {
-            let artist_path = dst.join(&song.album_artist);
+            let artist_path = dst.join(without_slashes(song.album_artist.clone()));
             if !artist_path.exists() {
                 create_dir(&artist_path)?;
             }
 
-            let album_path = artist_path.join(&song.album);
+            let album_path = artist_path.join(without_slashes(song.album.clone()));
             if !album_path.exists() {
                 create_dir(&album_path)?;
             }
