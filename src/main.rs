@@ -37,12 +37,12 @@ fn run() -> Result<()> {
         if let Some(song) = metadata::Metadata::new(entry.path())? {
             let artist_path = dst.join(&song.album_artist);
             if !artist_path.exists() {
-                fs::create_dir(&artist_path)?;
+                create_dir(&artist_path)?;
             }
 
             let album_path = artist_path.join(&song.album);
             if !album_path.exists() {
-                fs::create_dir(&album_path)?;
+                create_dir(&album_path)?;
             }
 
             let dst_path = album_path.join(file_name(&song));
@@ -125,4 +125,9 @@ fn without_slashes(s: String) -> String {
     }
 
     String::from_utf8(v).unwrap()
+}
+
+fn create_dir<P: AsRef<Path>>(path: P) -> Result<()> {
+    let p = path.as_ref();
+    fs::create_dir(&p).map_err(|e| format!("{}; {}", p.display(), e).into())
 }
