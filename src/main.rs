@@ -89,7 +89,13 @@ fn file_name(
     }: &metadata::Metadata,
 ) -> String {
     let suffix = ".mp3";
-    let mut s = format!("Disc {} - {:02} - {}{}", disc, track, title, suffix);
+    let mut s = format!(
+        "Disc {} - {:02} - {}{}",
+        disc,
+        track,
+        without_slashes(title.clone()),
+        suffix
+    );
     if FILE_NAME_MAXIMUM_LENGTH < s.len() {
         let more_indicator = "---";
         while FILE_NAME_MAXIMUM_LENGTH < s.len() + more_indicator.len() + suffix.len() {
@@ -99,4 +105,20 @@ fn file_name(
         s.push_str(suffix);
     }
     s
+}
+
+/// Returns a string with slashes replaced with hyphens.
+///
+/// Useful because some song titles, stored as metadata tags in media files, contain slashes and
+/// thus cannot be used as file names.
+fn without_slashes(s: String) -> String {
+    let mut v = s.into_bytes();
+
+    for b in v.iter_mut() {
+        if *b == b'/' {
+            *b = b'-';
+        }
+    }
+
+    String::from_utf8(v).unwrap()
 }
