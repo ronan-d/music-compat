@@ -33,18 +33,11 @@ fn run() -> Result<()> {
         }
 
         if let Some(m) = metadata::Metadata::new(entry.path())? {
-            let metadata::Metadata {
-                title,
-                album,
-                album_artist,
-                track,
-                disc,
-            } = m;
-            map.entry(album_artist)
+            map.entry(m.album_artist.clone())
                 .or_insert(HashMap::new())
-                .entry(album)
+                .entry(m.album.clone())
                 .or_insert(Vec::new())
-                .push((entry.into_path(), title, disc, track));
+                .push((entry.into_path(), m));
         }
     }
 
@@ -59,9 +52,9 @@ fn run() -> Result<()> {
                 fs::create_dir(&album_path)?;
             }
 
-            for (src_path, title, disc, track) in songs {
-                let dst_path = album_path.join(file_name(&title, disc, track));
-                convert(src_path, dst_path)?;
+            for (src_path, song) in songs {
+                let dst_path = album_path.join(file_name(&song));
+                convert(src_path, dst_path, song.container_format)?;
             }
         }
     }
@@ -93,7 +86,11 @@ where
 
 const FILE_NAME_MAXIMUM_LENGTH: usize = 63;
 
-fn file_name(title: &str, disc: usize, track: usize) -> String {
+fn file_name(
+    metadata::Metadata {
+        title, disc, track, ..
+    }: &metadata::Metadata,
+) -> String {
     let suffix = ".mp3";
     let mut s = format!("Disc {} - {:02} - {}{}", disc, track, title, suffix);
     if FILE_NAME_MAXIMUM_LENGTH < s.len() {
