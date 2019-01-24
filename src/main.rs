@@ -46,7 +46,11 @@ fn run() -> Result<()> {
             }
 
             let dst_path = album_path.join(file_name(&song));
-            convert(entry.path(), dst_path, song.container_format)?;
+
+            // If there exists a file there already, we perform no work.
+            if !dst_path.exists() {
+                convert(entry.path(), dst_path, song.container_format)?;
+            }
         }
     }
 
