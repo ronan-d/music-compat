@@ -1,4 +1,3 @@
-use std::collections::HashMap;
 use std::fs;
 use std::path::Path;
 use std::process;
@@ -24,7 +23,6 @@ fn run() -> Result<()> {
     let Cli { src, dst } = Cli::from_args();
 
     let it = walkdir::WalkDir::new(src);
-    let mut map = HashMap::new();
 
     for entry in it {
         let entry = entry?;
@@ -32,30 +30,19 @@ fn run() -> Result<()> {
             continue;
         }
 
-        if let Some(m) = metadata::Metadata::new(entry.path())? {
-            map.entry(m.album_artist.clone())
-                .or_insert(HashMap::new())
-                .entry(m.album.clone())
-                .or_insert(Vec::new())
-                .push((entry.into_path(), m));
-        }
-    }
+        if let Some(song) = metadata::Metadata::new(entry.path())? {
+            let artist_path = dst.join(&song.album_artist);
+            if !artist_path.exists() {
+                fs::create_dir(&artist_path)?;
+            }
 
-    for (artist, albums) in map {
-        let artist_path = dst.join(artist);
-        if !artist_path.exists() {
-            fs::create_dir(&artist_path)?;
-        }
-        for (album, songs) in albums {
-            let album_path = artist_path.join(album);
+            let album_path = artist_path.join(&song.album);
             if !album_path.exists() {
                 fs::create_dir(&album_path)?;
             }
 
-            for (src_path, song) in songs {
-                let dst_path = album_path.join(file_name(&song));
-                convert(src_path, dst_path, song.container_format)?;
-            }
+            let dst_path = album_path.join(file_name(&song));
+            convert(entry.path(), dst_path, song.container_format)?;
         }
     }
 
