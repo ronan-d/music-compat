@@ -24,6 +24,10 @@ fn run() -> Result<()> {
 
     let it = walkdir::WalkDir::new(src);
 
+    if !dst.exists() {
+        fs::create_dir_all(&dst)?;
+    }
+
     for entry in it {
         let entry = entry?;
         if !entry.file_type().is_file() {
