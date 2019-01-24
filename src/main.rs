@@ -62,7 +62,7 @@ fn run() -> Result<()> {
     Ok(())
 }
 
-fn convert<P, Q>(src: P, dst: Q) -> Result<()>
+fn convert<P, Q>(src: P, dst: Q, container_format: metadata::ContainerFormat) -> Result<()>
 where
     P: AsRef<Path>,
     Q: AsRef<Path>,
@@ -70,12 +70,18 @@ where
     let src = src.as_ref().as_os_str();
     let dst = dst.as_ref().as_os_str();
 
-    let status = process::Command::new("ffmpeg")
-        .arg("-hide_banner")
-        .arg("-i")
-        .arg(src)
-        .arg(dst)
-        .status()?;
+    let mut cmd = process::Command::new("ffmpeg");
+
+    cmd.arg("-hide_banner").arg("-i").arg(src);
+
+    if let metadata::ContainerFormat::Ogg = container_format {
+        cmd.arg("-map_metadata");
+        cmd.arg("0:s:0");
+    }
+
+    cmd.arg(dst);
+
+    let status = cmd.status()?;
 
     if !status.success() {
         Err("ffmpeg invocation failed".into())
