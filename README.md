@@ -11,7 +11,7 @@ installed.
 
 ## Installation
 
-Building `music-compat` requires a Rust toolchain. Install rust at
+Building `music-compat` requires a Rust toolchain. Install Rust at
 https://www.rust-lang.org/tools/install.
 
 Run the following command to install `music-compat`
