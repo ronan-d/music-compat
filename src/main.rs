@@ -33,22 +33,36 @@ fn run() -> Result<()> {
         }
 
         if let Some(m) = metadata::Metadata::new(entry.path())? {
-            let metadata::Metadata { album, track, disc } = m;
-            map.entry(album)
+            let metadata::Metadata {
+                title,
+                album,
+                album_artist,
+                track,
+                disc,
+            } = m;
+            map.entry(album_artist)
+                .or_insert(HashMap::new())
+                .entry(album)
                 .or_insert(Vec::new())
-                .push((entry.into_path(), disc, track));
+                .push((entry.into_path(), title, disc, track));
         }
     }
 
-    for (album, songs) in map {
-        let album_path = dst.join(album);
-        if !album_path.exists() {
-            fs::create_dir(&album_path)?;
+    for (artist, albums) in map {
+        let artist_path = dst.join(artist);
+        if !artist_path.exists() {
+            fs::create_dir(&artist_path)?;
         }
+        for (album, songs) in albums {
+            let album_path = artist_path.join(album);
+            if !album_path.exists() {
+                fs::create_dir(&album_path)?;
+            }
 
-        for (src_path, disc, track) in songs {
-            let dst_path = album_path.join(format!("{:04}-{:04}.mp3", disc, track));
-            convert(src_path, dst_path)?;
+            for (src_path, title, disc, track) in songs {
+                let dst_path = album_path.join(file_name(&title, disc, track));
+                convert(src_path, dst_path)?;
+            }
         }
     }
 
@@ -75,4 +89,20 @@ where
     } else {
         Ok(())
     }
+}
+
+const FILE_NAME_MAXIMUM_LENGTH: usize = 63;
+
+fn file_name(title: &str, disc: usize, track: usize) -> String {
+    let suffix = ".mp3";
+    let mut s = format!("Disc {} - {:02} - {}{}", disc, track, title, suffix);
+    if FILE_NAME_MAXIMUM_LENGTH < s.len() {
+        let more_indicator = "---";
+        while FILE_NAME_MAXIMUM_LENGTH < s.len() + more_indicator.len() + suffix.len() {
+            s.pop();
+        }
+        s.push_str(more_indicator);
+        s.push_str(suffix);
+    }
+    s
 }

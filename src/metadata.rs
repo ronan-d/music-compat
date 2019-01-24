@@ -6,7 +6,9 @@ use crate::Result;
 /// An aggregate of the information we need about a media file.
 #[derive(Debug, Clone)]
 pub struct Metadata {
+    pub title: String,
     pub album: String,
+    pub album_artist: String,
     pub track: usize,
     pub disc: usize,
 }
@@ -33,7 +35,9 @@ impl Metadata {
             .as_object()?;
 
         Some(Self {
+            title: tags.get("TITLE")?.as_str()?.to_string(),
             album: tags.get("ALBUM")?.as_str()?.to_string(),
+            album_artist: tags.get("album_artist")?.as_str()?.to_string(),
             track: tags.get("track")?.as_str()?.parse().unwrap(),
             disc: tags.get("disc")?.as_str()?.parse().unwrap(),
         })
