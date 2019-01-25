@@ -53,7 +53,12 @@ impl Metadata {
             album: tags.get("ALBUM")?.as_str()?.to_string(),
             album_artist: tags.get("album_artist")?.as_str()?.to_string(),
             track: trim_index(tags.get("track")?.as_str()?)?.parse().unwrap(),
-            disc: trim_index(tags.get("disc")?.as_str()?)?.parse().unwrap(),
+            disc: tags
+                .get("disc")
+                .and_then(serde_json::Value::as_str)
+                .and_then(trim_index)
+                .and_then(|x| x.parse().ok())
+                .unwrap_or(1),
         })
     }
 }
