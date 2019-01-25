@@ -52,8 +52,8 @@ impl Metadata {
             title: tags.get("TITLE")?.as_str()?.to_string(),
             album: tags.get("ALBUM")?.as_str()?.to_string(),
             album_artist: tags.get("album_artist")?.as_str()?.to_string(),
-            track: tags.get("track")?.as_str()?.parse().unwrap(),
-            disc: tags.get("disc")?.as_str()?.parse().unwrap(),
+            track: trim_index(tags.get("track")?.as_str()?)?.parse().unwrap(),
+            disc: trim_index(tags.get("disc")?.as_str()?)?.parse().unwrap(),
         })
     }
 }
@@ -99,4 +99,12 @@ impl ContainerFormat {
             _ => None,
         }
     }
+}
+
+/// Filters a track number.
+///
+/// Useful because some `track` metadata tags include the total number of tracks, like in `7/20`
+/// insteand of just `7`. The same thing happens for disc numbers.
+fn trim_index(s: &str) -> Option<&str> {
+    s.split(|c: char| !c.is_digit(10)).next()
 }
